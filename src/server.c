@@ -67,6 +67,10 @@ raw_response_t fetch_file(char *requested_path) {
     contents_size += n;
   }
 
+  // FILE *debug = fopen("debug.jpeg", "w");
+  // fwrite(contents, sizeof(char), contents_size, debug);
+  // fclose(debug);
+
   char *mime_buf = get_mime_type_by_filename(filename);
   char *content_type = calloc(100, sizeof(char));
   strncpy(content_type, mime_buf, strlen(mime_buf));
@@ -90,29 +94,38 @@ char *status_code_to_text(server_status_code_t status_code, int n,
 
 // TODO: path sanitanization
 
-void send_http_response(FILE *fp, raw_response_t response) {
+int render_http_response(FILE *fp, raw_response_t response) {
   char status_code_msg[256] = {0};
-  fprintf(fp, "HTTP/1.0 %d %s\n", response.status_code,
+  fprintf(fp, "HTTP/1.0 %d %s\r\n", response.status_code,
           status_code_to_text(response.status_code, 256, status_code_msg));
 
-  fprintf(fp, "Server: SimpleHttpInC/0.1 C23\n");
+  fprintf(fp, "Server: SimpleHttpInC/0.1 C23\r\n");
 
   if (response.payload != NULL) {
-    fprintf(fp, "Content-type: %s\n", response.payload->content_type_own);
-    fprintf(fp, "Content-length: %d\n", response.payload->length);
+    fprintf(fp, "Content-type: %s\r\n", response.payload->content_type_own);
+    fprintf(fp, "Content-length: %d\r\n", response.payload->length);
 
     // TODO: last-modified
 
-    fprintf(fp, "\n");
-    fprintf(fp, "%s\n", response.payload->contents_own);
+    fprintf(fp, "\r\n");
+    fflush(fp);
+    int printed = fwrite(response.payload->contents_own, sizeof(char),
+                         response.payload->length, fp);
+    printf("Printed %d chars\n", printed);
 
-    free(response.payload->content_type_own);
-    free(response.payload->contents_own);
-    free(response.payload);
+    int length = response.payload->length;
+
+    // free(response.payload->content_type_own);
+    // free(response.payload->contents_own);
+    // free(response.payload);
+
+    return length;
   }
+  return 0;
 }
 
-void access_file(FILE *fp, char *requested_path) {
+int access_file(FILE *fp, char *requested_path) {
   raw_response_t response = fetch_file(requested_path);
-  send_http_response(fp, response);
+  printf("Sent %d bytes\n", response.payload->length);
+  return render_http_response(fp, response);
 }
