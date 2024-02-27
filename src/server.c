@@ -57,7 +57,7 @@ raw_response_t fetch_file(char *requested_path) {
   }
 
   // TODO: make sure we can handle big files by resizing this buffer if needed
-  char *contents = calloc(1 + 1024 * 10, sizeof(char));
+  char *contents = calloc(1 + 1024 * 1024, sizeof(char));
   int contents_size = 0;
 
   char buf[1024];
@@ -94,7 +94,7 @@ char *status_code_to_text(server_status_code_t status_code, int n,
 
 // TODO: path sanitanization
 
-int render_http_response(FILE *fp, raw_response_t response) {
+void render_http_response(FILE *fp, raw_response_t response) {
   char status_code_msg[256] = {0};
   fprintf(fp, "HTTP/1.0 %d %s\r\n", response.status_code,
           status_code_to_text(response.status_code, 256, status_code_msg));
@@ -113,19 +113,14 @@ int render_http_response(FILE *fp, raw_response_t response) {
                          response.payload->length, fp);
     printf("Printed %d chars\n", printed);
 
-    int length = response.payload->length;
-
     // free(response.payload->content_type_own);
     // free(response.payload->contents_own);
     // free(response.payload);
-
-    return length;
   }
-  return 0;
 }
 
-int access_file(FILE *fp, char *requested_path) {
+void access_file(FILE *fp, char *requested_path) {
   raw_response_t response = fetch_file(requested_path);
   printf("Sent %d bytes\n", response.payload->length);
-  return render_http_response(fp, response);
+  render_http_response(fp, response);
 }
