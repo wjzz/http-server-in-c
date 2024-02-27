@@ -24,3 +24,11 @@ server_status_code_t serve_file(char *requested_path) {
 
   return OK;
 }
+
+char *status_code_text(server_status_code_t status_code, int n, char buf[n]) {
+  switch (n) {
+  case 200:
+    snprintf(buf, n, "OK");
+  }
+  return buf;
+}
