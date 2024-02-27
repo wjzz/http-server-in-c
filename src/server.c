@@ -6,6 +6,8 @@
 
 const char SERVE_DIRECTORY[] = "serve";
 
+// TODO: add more errors
+
 typedef enum { OK = 200, INTERNAL_SERVER_ERROR = 503 } server_status_code_t;
 
 typedef struct {
@@ -18,6 +20,28 @@ typedef struct {
   server_status_code_t status_code;
   payload_t *payload;
 } raw_response_t;
+
+typedef struct {
+  char *extension;
+  char *mime_type;
+} mime_t;
+
+mime_t mime_types[] = {{"js", "text/javascript"},
+                       {"css", "text/css"},
+                       {"html", "text/html"},
+                       {"jpeg", "image/jpeg"}};
+
+char *get_mime_type_by_filename(char *filename) {
+  char *token = strsep(&filename, ".");
+  token = strsep(&filename, ".");
+
+  for (size_t i = 0; i < sizeof(mime_types) / sizeof(mime_types[0]); ++i) {
+    if (strcmp(mime_types[i].extension, token) == 0) {
+      return mime_types[i].mime_type;
+    }
+  }
+  return NULL;
+}
 
 raw_response_t fetch_file(char *requested_path) {
   char filename[256];
@@ -42,9 +66,10 @@ raw_response_t fetch_file(char *requested_path) {
     memcpy(contents + contents_size, buf, n);
     contents_size += n;
   }
-  char example[] = "text/html";
+
+  char *mime_buf = get_mime_type_by_filename(filename);
   char *content_type = calloc(100, sizeof(char));
-  strncpy(content_type, example, sizeof(example) / sizeof(example[0]));
+  strncpy(content_type, mime_buf, strlen(mime_buf));
 
   payload_t *payload = malloc(sizeof(payload_t));
   payload->length = contents_size;
@@ -64,7 +89,6 @@ char *status_code_to_text(server_status_code_t status_code, int n,
 }
 
 // TODO: path sanitanization
-// TODO: mime types
 
 void send_http_response(FILE *fp, raw_response_t response) {
   char status_code_msg[256] = {0};
