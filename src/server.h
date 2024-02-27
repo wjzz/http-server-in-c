@@ -1,6 +1,8 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-void access_file(FILE *fp, char *requested_path);
+#include <string>
+
+std::string access_file(const std::string &requested_path);
 
 #endif

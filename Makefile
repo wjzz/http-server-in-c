@@ -1,8 +1,8 @@
-COMPILER=clang
-FLAGS=-Wall -Werror -pedantic -std=c2x
+COMPILER=clang++
+FLAGS=-Wall -Werror -pedantic -std=c++20
 
 compile:
-	@$(COMPILER) $(FLAGS) src/main.c src/server.c -o bin/server
+	@$(COMPILER) $(FLAGS) src/main.cpp src/server.cpp -o bin/server
 
 run: compile
 	@./bin/server
